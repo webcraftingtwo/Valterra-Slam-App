@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valterra | SLAM Re-Entry Procedure</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #E8A020;
+    --gold-light: #F5C060;
+    --dark: #0D0F12;
+    --dark-2: #161A1F;
+    --dark-3: #1E2530;
+    --dark-4: #252D38;
+    --text: #E8EDF2;
+    --text-muted: #7A8899;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --amber: #F39C12;
+    --border: rgba(232,160,32,0.2);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SPLASH / LOGIN */
+  #splash {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 60% 30%, rgba(232,160,32,0.08) 0%, transparent 65%),
+                linear-gradient(160deg, #0D0F12 60%, #1a1400 100%);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .logo-block {
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-block .company {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .logo-block .sub {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  .diamond {
+    width: 5rem;
+    height: 5rem;
+    background: var(--gold);
+    transform: rotate(45deg);
+    margin: 0 auto 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeUp 0.5s ease 0.2s both;
+    box-shadow: 0 0 40px rgba(232,160,32,0.3);
+  }
+
+  .diamond-inner {
+    transform: rotate(-45deg);
+    font-size: 1.6rem;
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1.05;
+    animation: fadeUp 0.6s ease 0.3s both;
+    margin-bottom: 0.5rem;
+  }
+
+  .ref-badge {
+    display: inline-block;
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    padding: 0.35rem 0.9rem;
+    border-radius: 2px;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  .login-card {
+    background: var(--dark-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 380px;
+    animation: fadeUp 0.6s ease 0.5s both;
+  }
+
+  .form-group {
+    margin-bottom: 1.2rem;
+    text-align: left;
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--dark-3);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    padding: 0.75rem 1rem;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.95rem;
+    border-radius: 3px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--gold);
+  }
+
+  select option { background: var(--dark-3); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 0.85rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  /* APP SHELL */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--dark-2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .topbar-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+  }
+
+  .topbar-title {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    padding-left: 1rem;
+  }
+
+  .user-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--dark-3);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 0.3rem 0.8rem 0.3rem 0.4rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+  }
+
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #000;
+  }
+
+  /* PHASE PROGRESS BAR */
+  .phase-nav {
+    background: var(--dark-2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1rem;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .phase-nav::-webkit-scrollbar { display: none; }
+
+  .phase-tab {
+    flex: 0 0 auto;
+    padding: 0.75rem 1.2rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    position: relative;
+  }
+
+  .phase-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .phase-tab.done {
+    color: var(--green);
+    border-bottom-color: transparent;
+  }
+
+  .phase-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .phase-tab.done .phase-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    flex: 1;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 6rem;
+  }
+
+  .phase-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .phase-num {
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+  }
+
+  .phase-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .phase-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+
+  /* CHECKLIST ITEMS */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .check-item {
+    background: var(--dark-2);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+
+  .check-item:hover { border-color: rgba(232,160,32,0.25); }
+
+  .check-item.checked {
+    background: rgba(46,204,113,0.05);
+    border-color: rgba(46,204,113,0.3);
+  }
+
+  .check-item.critical {
+    border-left: 3px solid var(--red);
+  }
+
+  .check-item.critical.checked {
+    border-left-color: var(--green);
+  }
+
+  .check-box {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 2px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.05rem;
+    transition: all 0.2s;
+  }
+
+  .check-item.checked .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .check-icon {
+    font-size: 0.8rem;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .check-item.checked .check-icon { opacity: 1; }
+
+  .check-label {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    flex: 1;
+  }
+
+  .check-item.checked .check-label {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .critical-tag {
+    display: inline-block;
+    background: rgba(231,76,60,0.15);
+    color: var(--red);
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+    text-transform: uppercase;
+  }
+
+  /* HAZARD SECTION */
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 1.5rem 0 0.6rem;
+  }
+
+  .hazard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .hazard-chip {
+    background: var(--dark-3);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .hazard-chip:hover { border-color: var(--amber); }
+
+  .hazard-chip.selected {
+    background: rgba(243,156,18,0.1);
+    border-color: var(--amber);
+    color: var(--gold-light);
+  }
+
+  .hazard-icon { font-size: 1rem; }
+
+  /* GAS READINGS SECTION */
+  .gas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .gas-field {
+    background: var(--dark-3);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 0.75rem;
+  }
+
+  .gas-field label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 0.4rem;
+    color: var(--text-muted);
+  }
+
+  .gas-field input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0;
+    padding: 0.3rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .gas-field .unit {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  /* TEXTAREA */
+  textarea {
+    width: 100%;
+    background: var(--dark-3);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text);
+    padding: 0.75rem 1rem;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.9rem;
+    border-radius: 3px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--gold); }
+
+  /* TIMER */
+  .timer-bar {
+    background: var(--dark-3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .timer-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .timer-display {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+  }
+
+  .timer-display.safe { color: var(--green); }
+  .timer-display.urgent { color: var(--red); }
+
+  .timer-btn {
+    background: var(--dark-4);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    padding: 0.4rem 0.9rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    transition: background 0.2s;
+  }
+
+  .timer-btn:hover { background: var(--dark-2); }
+
+  /* PROGRESS FOOTER */
+  .progress-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--dark-2);
+    border-top: 1px solid var(--border);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 100;
+  }
+
+  .progress-wrap {
+    flex: 1;
+  }
+
+  .progress-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--dark-3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .btn-next {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 0.7rem 1.6rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, opacity 0.2s;
+  }
+
+  .btn-next:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: var(--gold);
+  }
+
+  .btn-next:not(:disabled):hover { background: var(--gold-light); }
+
+  /* SIGN-OFF */
+  .signoff-card {
+    background: var(--dark-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .signoff-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .sig-box {
+    border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 3px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .sig-box:hover { border-color: var(--gold); }
+  .sig-box.signed { border-color: var(--green); color: var(--green); }
+
+  /* SUCCESS SCREEN */
+  #success {
+    display: none;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 40%, rgba(46,204,113,0.08) 0%, transparent 65%),
+                var(--dark);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(46,204,113,0.15);
+    border: 2px solid var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .success-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--green);
+    animation: fadeUp 0.5s ease 0.1s both;
+    margin-bottom: 0.5rem;
+  }
+
+  .success-sub {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    animation: fadeUp 0.5s ease 0.2s both;
+    max-width: 340px;
+    line-height: 1.5;
+  }
+
+  .record-box {
+    background: var(--dark-2);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+    max-width: 340px;
+    width: 100%;
+    animation: fadeUp 0.5s ease 0.3s both;
+  }
+
+  .record-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .record-row:last-child { border-bottom: none; }
+  .record-key { color: var(--text-muted); }
+  .record-val { font-weight: 600; }
+
+  .btn-new {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--gold);
+    padding: 0.7rem 2rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    animation: fadeUp 0.5s ease 0.4s both;
+    transition: background 0.2s;
+  }
+
+  .btn-new:hover { background: rgba(232,160,32,0.08); }
+
+  /* NB WARNING */
+  .nb-warning {
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.3);
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: #ff9999;
+    margin-top: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .nb-warning strong { color: var(--red); }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .phase-panel { display: none; }
+  .phase-panel.active { display: block; animation: fadeUp 0.3s ease both; }
+
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 1.2rem 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH / LOGIN -->
+<div id="splash">
+  <div class="logo-block">
+    <div class="company">Valterra</div>
+    <div class="sub">Platinum · Unki Mine</div>
+  </div>
+  <div class="diamond">
+    <div class="diamond-inner">⛏</div>
+  </div>
+  <h1>SLAM Re-Entry<br>Procedure</h1>
+  <div class="ref-badge">REF: UNK-MIN-MIN-PRO-0002 · V6.0</div>
+
+  <div class="login-card">
+    <div class="form-group">
+      <label>Employee Name</label>
+      <input type="text" id="inp-name" placeholder="Full name" />
+    </div>
+    <div class="form-group">
+      <label>Employee ID / Badge</label>
+      <input type="text" id="inp-id" placeholder="e.g. VM-00214" />
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="inp-role">
+        <option value="">Select your role</option>
+        <option>Overseer Miner</option>
+        <option>Shift Boss</option>
+        <option>Safety Officer – Mining</option>
+        <option>Geo-Technician</option>
+        <option>Competent Assistant</option>
+        <option>Section Manager</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Section</label>
+      <select id="inp-section">
+        <option value="">Select section</option>
+        <option>North Section</option>
+        <option>South Section</option>
+        <option>Development Section</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="startApp()">BEGIN PROCEDURE ▶</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">VALTERRA</div>
+      <div class="topbar-title">SLAM Re-Entry</div>
+    </div>
+    <div class="user-pill">
+      <div class="user-avatar" id="avatar-init">VM</div>
+      <span id="user-name-display">Miner</span>
+    </div>
+  </div>
+
+  <!-- PHASE TABS -->
+  <div class="phase-nav" id="phase-nav">
+    <div class="phase-tab active" onclick="goPhase(0)" id="tab-0">
+      <div class="phase-check">1</div> Preparation
+    </div>
+    <div class="phase-tab" onclick="goPhase(1)" id="tab-1">
+      <div class="phase-check">2</div> Waiting Place
+    </div>
+    <div class="phase-tab" onclick="goPhase(2)" id="tab-2">
+      <div class="phase-check">3</div> Initial Re-Entry
+    </div>
+    <div class="phase-tab" onclick="goPhase(3)" id="tab-3">
+      <div class="phase-check">4</div> Watering & Barring
+    </div>
+    <div class="phase-tab" onclick="goPhase(4)" id="tab-4">
+      <div class="phase-check">5</div> Explosives
+    </div>
+    <div class="phase-tab" onclick="goPhase(5)" id="tab-5">
+      <div class="phase-check">✓</div> Sign-Off
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PHASE 1: Re-Entry Preparation -->
+    <div class="phase-panel active" id="panel-0">
+      <div class="phase-header">
+        <div class="phase-num">Phase 9.1</div>
+        <div class="phase-title">Re-Entry Preparation</div>
+        <div class="phase-desc">Complete all steps at the Lamp and Crush Building before proceeding underground. Two-hour minimum wait after primary blast must be confirmed.</div>
+      </div>
+
+      <div class="timer-bar">
+        <div>
+          <div class="timer-label">30-Min Initial Re-Entry Timer</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Starts on Phase 3 — must complete within 30 min</div>
+        </div>
+        <div class="timer-display" id="timer-disp">30:00</div>
+      </div>
+
+      <div class="checklist" id="cl-0">
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Checked blasting token book and noted time of blast <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Synchronized watch with main blasting watch <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Overseer Miner and crew proceeded for clocking in — cap lamp, gas tester and rescue pack collected</div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Gas clearing and main fan functionality confirmed on SCADA System <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Two-hour lapse after Primary Blast confirmed as per Re-Entry Exemption <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Re-entry time confirmed on blasting board <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Ventilation triangular flaps inspected at Man and Material Decline AND Conveyor Decline — both blowing inward (correct airflow confirmed)</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Proceeded underground checking correct airflow all the way to designated waiting place — gases and condition of waiting place thoroughly checked</div>
+        </div>
+      </div>
+
+      <div class="section-label">Blast Time Record</div>
+      <div class="gas-grid">
+        <div class="gas-field">
+          <label>Blast Time</label>
+          <input type="time" id="blast-time" />
+          <div class="unit">HH:MM</div>
+        </div>
+        <div class="gas-field">
+          <label>Confirmed Re-Entry Time</label>
+          <input type="time" id="reentry-time" />
+          <div class="unit">2 hrs after blast</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2: Waiting Place Management -->
+    <div class="phase-panel" id="panel-1">
+      <div class="phase-header">
+        <div class="phase-num">Phase 9.2</div>
+        <div class="phase-title">Waiting Place Management</div>
+        <div class="phase-desc">Assemble crew at the waiting place. Complete safety talk, registers, PPE inspection, and duty assignment before any re-entry begins.</div>
+      </div>
+
+      <div class="checklist" id="cl-1">
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Safety Talk conducted — hazards and risks of all underground tasks reviewed <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Each individual signed in the Toolbox Talk Book <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Team Talk conducted — mine's production performance and production work plan discussed</div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Team registered in Attendance Record Book — clocking cards handed in to Overseer Miner/Team Leader <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">PPE and Tools inspected <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">All personnel checked — confirmed fit for duty <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Overseer Miner assigned a competent person to oversee the team whilst Overseer Miner and assistants proceed to workings for re-entry</div>
+        </div>
+      </div>
+
+      <div class="section-label">Identify Hazards</div>
+      <div class="hazard-grid">
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">💨</span> Fumes / Gas
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">🪨</span> Bad Hangings
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">💧</span> Dust Exposure
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">💥</span> Blown-Out Explosives
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">🌬️</span> Poor Ventilation
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">⚡</span> Electrical Hazard
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">🔥</span> Misfire Risk
+        </div>
+        <div class="hazard-chip" onclick="this.classList.toggle('selected')">
+          <span class="hazard-icon">📉</span> Ground Instability
+        </div>
+      </div>
+
+      <div class="section-label">Additional Hazard Notes</div>
+      <textarea placeholder="Describe any additional hazards identified during Safety Talk..."></textarea>
+    </div>
+
+    <!-- PHASE 3: Initial Re-Entry -->
+    <div class="phase-panel" id="panel-2">
+      <div class="phase-header">
+        <div class="phase-num">Phase 9.3</div>
+        <div class="phase-title">Initial Re-Entry</div>
+        <div class="phase-desc">⏱ This entire process must not exceed 30 minutes. Start the timer when you switch the NSS box to NO BLAST.</div>
+      </div>
+
+      <div class="timer-bar">
+        <div>
+          <div class="timer-label">30-Min Re-Entry Timer</div>
+          <div id="timer-status" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Press START when NSS switched to NO BLAST</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;">
+          <div class="timer-display" id="timer-main">30:00</div>
+          <button class="timer-btn" id="timer-btn" onclick="toggleTimer()">START</button>
+        </div>
+      </div>
+
+      <div class="checklist" id="cl-2">
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Proceeded to NSS Box — switched to NO BLAST position and locked with identifiable padlock <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Opened sectional blasting barricade with competent assistants — entered and closed barricade before proceeding to blasted ends <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Joint ground assessment of all blasted bords and other areas conducted as per plan <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Blasting cables disconnected at Panel Connector Unit (PCU) <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Airflow direction verified using dry powder — proceeded towards all panels from intake airway to return airway</div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Continuous gas tests done at intake and outlet of each panel — all tests logged in Gas Test Book <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Barricades installed on all blasted panels <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Returned to waiting place — duties assigned and permission given to enter section for work</div>
+        </div>
+      </div>
+
+      <div class="section-label">Gas Readings (MGDI) — Log All Panels</div>
+      <div class="gas-grid">
+        <div class="gas-field">
+          <label>CO (Carbon Monoxide)</label>
+          <input type="number" placeholder="0" step="0.1" />
+          <div class="unit">ppm — Limit: 50 ppm</div>
+        </div>
+        <div class="gas-field">
+          <label>NO₂ (Nitrogen Dioxide)</label>
+          <input type="number" placeholder="0" step="0.1" />
+          <div class="unit">ppm — Limit: 3 ppm</div>
+        </div>
+        <div class="gas-field">
+          <label>O₂ (Oxygen Level)</label>
+          <input type="number" placeholder="20.9" step="0.1" />
+          <div class="unit">% — Min: 19.5%</div>
+        </div>
+        <div class="gas-field">
+          <label>H₂S (Hydrogen Sulphide)</label>
+          <input type="number" placeholder="0" step="0.1" />
+          <div class="unit">ppm — Limit: 10 ppm</div>
+        </div>
+      </div>
+
+      <div class="nb-warning">
+        <strong>NB:</strong> If multi-gas detector sounds Alarm 2 — crew must immediately withdraw and institute ventilation to lower gas levels. Do not re-enter until safe.
+      </div>
+
+      <div class="section-label">FOG Lights</div>
+      <div class="checklist">
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">FOG lights checked — those triggered red: area barricaded, logged in official log book, reported to Rock Engineering</div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">FOG lights switched off or damaged: logged in official log book, Rock Engineering team notified</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4: Watering & Barring Down -->
+    <div class="phase-panel" id="panel-3">
+      <div class="phase-header">
+        <div class="phase-num">Phase 9.4</div>
+        <div class="phase-title">Watering Down & Barring Down</div>
+        <div class="phase-desc">Complete at the blasted end. Suppress dust and fumes, expose and remove bad hangings before any crew enters work areas.</div>
+      </div>
+
+      <div class="checklist" id="cl-3">
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Tested for gases at blasted end <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Checked for any blown out explosives at blasted end</div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Watered down to expose bad hangings and allay dust and fumes <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Barred down as per Barring Down Procedure UNK-MIN-MIN-PRO-0003 <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Procedure repeated as far as safe and practical</div>
+        </div>
+      </div>
+
+      <div class="nb-warning">
+        <strong>NB: NO ONE MUST WORK UNDER UNSUPPORTED GROUND.</strong> This is a non-negotiable safety requirement per Valterra operational procedure.
+      </div>
+
+      <div class="section-label">Water Blast Duration (Development End)</div>
+      <div class="gas-field" style="max-width:200px;">
+        <label>Duration Run (minutes)</label>
+        <input type="number" placeholder="15" min="15" />
+        <div class="unit">Minimum 15 minutes required</div>
+      </div>
+
+      <div class="section-label">Observations / Notes</div>
+      <textarea placeholder="Describe ground conditions, hangings found, areas barred..."></textarea>
+    </div>
+
+    <!-- PHASE 5: Searching Blown Out Explosives -->
+    <div class="phase-panel" id="panel-4">
+      <div class="phase-header">
+        <div class="phase-num">Phase 9.5</div>
+        <div class="phase-title">Searching & Handling Blown-Out Explosives</div>
+        <div class="phase-desc">Conducted by the Overseer Miner or Blasting Licence holder only, after barring down is complete.</div>
+      </div>
+
+      <div class="checklist" id="cl-4">
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">After barring down — Overseer Miner / Blasting Licence holder searched for blown out explosives <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">All used twisted cables, shock tube pieces and explosive fragments collected into Canvas / Chola bag <span class="critical-tag">Critical</span></div>
+        </div>
+        <div class="check-item critical" onclick="toggle(this)">
+          <div class="check-box"><span class="check-icon">✓</span></div>
+          <div class="check-label">Old explosives disposed of into old explosives box located in the section <span class="critical-tag">Critical</span></div>
+        </div>
+      </div>
+
+      <div class="nb-warning">
+        <strong>NB:</strong> Any identified misfires must be treated according to the Misfire Reduction and Management Procedure <strong>UNK-MIN-MIN-PRO-0067</strong>.
+      </div>
+
+      <div class="section-label">Misfire Found?</div>
+      <div style="display:flex;gap:0.6rem;margin-bottom:1rem;">
+        <div class="hazard-chip" id="misfire-no" onclick="selectMisfire('no')" style="flex:1;justify-content:center;">
+          <span class="hazard-icon">✅</span> No Misfires
+        </div>
+        <div class="hazard-chip" id="misfire-yes" onclick="selectMisfire('yes')" style="flex:1;justify-content:center;">
+          <span class="hazard-icon">⚠️</span> Misfire Found
+        </div>
+      </div>
+
+      <div id="misfire-detail" style="display:none;">
+        <div class="section-label">Misfire Details</div>
+        <textarea placeholder="Describe misfire location, type, and action taken per UNK-MIN-MIN-PRO-0067..."></textarea>
+      </div>
+
+      <div class="section-label">Explosives Search Notes</div>
+      <textarea placeholder="Note quantities collected, locations, and any abnormalities found..."></textarea>
+    </div>
+
+    <!-- PHASE 6: Sign-Off -->
+    <div class="phase-panel" id="panel-5">
+      <div class="phase-header">
+        <div class="phase-num">Final Step</div>
+        <div class="phase-title">Supervisor Sign-Off</div>
+        <div class="phase-desc">The re-entry procedure is complete. Obtain supervisor approval and lock the record. This will be stored for inspection and retained for 5 years per Record Control policy.</div>
+      </div>
+
+      <div class="signoff-card">
+        <div class="signoff-row">
+          <label>Overseer Miner / Submitting Officer</label>
+          <div class="sig-box" id="sig-1" onclick="signOff('sig-1','sig-1-name')">
+            <span id="sig-1-name">Tap to confirm identity</span>
+          </div>
+        </div>
+        <div class="signoff-row">
+          <label>Shift Boss / Supervisor Sign-Off</label>
+          <input type="text" id="supervisor-name" placeholder="Supervisor full name" style="margin-bottom:0.5rem;" />
+          <div class="sig-box" id="sig-2" onclick="signOff('sig-2','sig-2-name')">
+            <span id="sig-2-name">Tap to confirm supervisor sign-off</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="signoff-row">
+          <label>Date & Time of Completion</label>
+          <input type="datetime-local" id="completion-time" />
+        </div>
+
+        <div class="signoff-row">
+          <label>Overall Remarks</label>
+          <textarea placeholder="Any overall observations, incidents, or notes for the record..."></textarea>
+        </div>
+
+        <div class="signoff-row" style="margin-bottom:0;">
+          <label>Reference Number</label>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:0.1em;" id="ref-num">UNK-MIN-MIN-PRO-0002</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- PROGRESS FOOTER -->
+  <div class="progress-footer">
+    <div class="progress-wrap">
+      <div class="progress-text" id="prog-text">Phase 1 of 6 — 0% Complete</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <button class="btn-next" id="btn-next" onclick="nextPhase()">NEXT ▶</button>
+  </div>
+</div><!-- /app -->
+
+<!-- SUCCESS -->
+<div id="success">
+  <div class="success-icon">✓</div>
+  <div class="success-title">Re-Entry Cleared</div>
+  <div class="success-sub">All SLAM procedure phases completed and signed off. Record has been submitted.</div>
+
+  <div class="record-box" id="record-summary">
+    <div class="record-row">
+      <span class="record-key">Officer</span>
+      <span class="record-val" id="rec-name">—</span>
+    </div>
+    <div class="record-row">
+      <span class="record-key">Section</span>
+      <span class="record-val" id="rec-section">—</span>
+    </div>
+    <div class="record-row">
+      <span class="record-key">Reference</span>
+      <span class="record-val">UNK-MIN-MIN-PRO-0002</span>
+    </div>
+    <div class="record-row">
+      <span class="record-key">Version</span>
+      <span class="record-val">6.0</span>
+    </div>
+    <div class="record-row">
+      <span class="record-key">Timestamp</span>
+      <span class="record-val" id="rec-time">—</span>
+    </div>
+    <div class="record-row">
+      <span class="record-key">Status</span>
+      <span class="record-val" style="color:var(--green)">✓ SUBMITTED</span>
+    </div>
+  </div>
+
+  <button class="btn-new" onclick="resetAll()">START NEW PROCEDURE</button>
+</div>
+
+<script>
+  let currentPhase = 0;
+  let timerInterval = null;
+  let timerSeconds = 1800;
+  let timerRunning = false;
+  let userData = {};
+
+  function startApp() {
+    const name = document.getElementById('inp-name').value.trim();
+    const id = document.getElementById('inp-id').value.trim();
+    const role = document.getElementById('inp-role').value;
+    const section = document.getElementById('inp-section').value;
+
+    if (!name || !id || !role || !section) {
+      alert('Please complete all fields before starting.');
+      return;
+    }
+
+    userData = { name, id, role, section };
+
+    document.getElementById('user-name-display').textContent = name.split(' ')[0];
+    document.getElementById('avatar-init').textContent = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+
+    // Set default completion time
+    const now = new Date();
+    document.getElementById('completion-time').value = now.toISOString().slice(0,16);
+
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+
+    updateProgress();
+  }
+
+  function toggle(el) {
+    el.classList.toggle('checked');
+    updateProgress();
+  }
+
+  function goPhase(n) {
+    // Allow going back, restrict going forward past current
+    if (n > currentPhase + 1) return;
+
+    document.getElementById('panel-' + currentPhase).classList.remove('active');
+    document.getElementById('tab-' + currentPhase).classList.remove('active');
+    if (!document.getElementById('tab-' + currentPhase).classList.contains('done')) {
+      // keep as-is
+    }
+
+    currentPhase = n;
+    document.getElementById('panel-' + currentPhase).classList.add('active');
+    document.getElementById('tab-' + currentPhase).classList.add('active');
+
+    // Update next button
+    updateNextBtn();
+    updateProgress();
+
+    // Scroll tabs into view
+    document.getElementById('tab-' + n).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  function nextPhase() {
+    if (currentPhase >= 5) {
+      submitProcedure();
+      return;
+    }
+
+    // Mark current tab as done
+    const tab = document.getElementById('tab-' + currentPhase);
+    tab.classList.remove('active');
+    tab.classList.add('done');
+    tab.querySelector('.phase-check').textContent = '✓';
+
+    goPhase(currentPhase + 1);
+  }
+
+  function updateNextBtn() {
+    const btn = document.getElementById('btn-next');
+    if (currentPhase === 5) {
+      btn.textContent = 'SUBMIT RECORD ✓';
+    } else {
+      btn.textContent = 'NEXT ▶';
+    }
+  }
+
+  function updateProgress() {
+    const total = 6;
+    const pct = Math.round((currentPhase / total) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+
+    const phaseNames = ['Preparation','Waiting Place','Initial Re-Entry','Watering & Barring','Explosives Search','Sign-Off'];
+    document.getElementById('prog-text').textContent =
+      'Phase ' + (currentPhase + 1) + ' of 6 — ' + phaseNames[currentPhase];
+  }
+
+  // Timer
+  function toggleTimer() {
+    if (!timerRunning) {
+      timerRunning = true;
+      document.getElementById('timer-btn').textContent = 'STOP';
+      document.getElementById('timer-status').textContent = 'Timer running — complete within 30 minutes';
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('timer-status').textContent = '⚠ Time exceeded! Return to waiting place immediately.';
+        }
+      }, 1000);
+    } else {
+      timerRunning = false;
+      clearInterval(timerInterval);
+      document.getElementById('timer-btn').textContent = 'RESUME';
+      document.getElementById('timer-status').textContent = 'Timer paused';
+    }
+  }
+
+  function updateTimerDisplay() {
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    const str = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    const el = document.getElementById('timer-main');
+    el.textContent = str;
+
+    if (timerSeconds > 600) {
+      el.className = 'timer-display safe';
+    } else if (timerSeconds > 300) {
+      el.className = 'timer-display';
+    } else {
+      el.className = 'timer-display urgent';
+    }
+  }
+
+  function signOff(boxId, nameId) {
+    const box = document.getElementById(boxId);
+    const span = document.getElementById(nameId);
+    if (box.classList.contains('signed')) return;
+
+    const name = boxId === 'sig-1' ? userData.name :
+      (document.getElementById('supervisor-name').value.trim() || 'Supervisor');
+
+    box.classList.add('signed');
+    span.textContent = '✓ Signed by ' + name + ' — ' + new Date().toLocaleTimeString();
+  }
+
+  function selectMisfire(val) {
+    document.getElementById('misfire-no').classList.toggle('selected', val === 'no');
+    document.getElementById('misfire-yes').classList.toggle('selected', val === 'yes');
+    document.getElementById('misfire-detail').style.display = val === 'yes' ? 'block' : 'none';
+  }
+
+  function submitProcedure() {
+    const now = new Date();
+    document.getElementById('rec-name').textContent = userData.name + ' (' + userData.id + ')';
+    document.getElementById('rec-section').textContent = userData.section;
+    document.getElementById('rec-time').textContent = now.toLocaleString();
+
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('success').style.display = 'flex';
+  }
+
+  function resetAll() {
+    location.reload();
+  }
+</script>
+</body>
+</html>
