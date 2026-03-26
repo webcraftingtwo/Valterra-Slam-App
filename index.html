@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Valterra | SLAM Re-Entry Procedure</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --teal:      #1B7B6E;
@@ -325,6 +326,101 @@
   /* NB */
   .nb{background:#FFF8EC;border:1.5px solid #F5C842;border-radius:3px;padding:0.7rem 0.88rem;margin-top:0.8rem;font-size:0.7rem;color:#7A5800;line-height:1.55;}
   .nb strong{color:#5A4000;}
+
+  /* GAS VALIDATION */
+  .gas-f.safe  { border-color:var(--green); background:rgba(39,174,96,0.04); }
+  .gas-f.danger{ border-color:var(--red);   background:rgba(231,76,60,0.04); }
+  .gas-f.safe  input { border-bottom-color:var(--green); }
+  .gas-f.danger input { border-bottom-color:var(--red); }
+
+  .gas-status {
+    display:flex; align-items:center; gap:0.3rem;
+    font-size:0.58rem; font-weight:700; margin-top:0.25rem;
+    font-family:'Montserrat',sans-serif; letter-spacing:0.08em;
+  }
+  .gas-status.ok  { color:var(--green); }
+  .gas-status.bad { color:var(--red); animation:pulse 0.8s ease; }
+
+  .gas-fail-banner {
+    display:none;
+    background:#FEF0EE; border:1.5px solid var(--red); border-radius:4px;
+    padding:0.9rem 1rem; margin:1rem 0;
+  }
+  .gas-fail-banner.show { display:block; animation:shake 0.38s ease; }
+
+  .gfb-title {
+    font-size:0.65rem; font-weight:800; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--red); margin-bottom:0.35rem;
+  }
+  .gfb-list {
+    font-size:0.72rem; color:#c0392b; line-height:1.7; margin-bottom:0.85rem;
+  }
+  .gfb-actions { display:flex; gap:0.55rem; }
+
+  .btn-retake {
+    flex:1; background:var(--teal); color:#fff; border:none;
+    padding:0.7rem; font-family:'Montserrat',sans-serif;
+    font-size:0.65rem; font-weight:800; letter-spacing:0.12em;
+    text-transform:uppercase; border-radius:3px; cursor:pointer;
+    transition:background 0.15s;
+  }
+  .btn-retake:hover { background:var(--teal-dark); }
+
+  .btn-abort {
+    flex:1; background:#fff; color:var(--red);
+    border:1.5px solid var(--red); padding:0.7rem;
+    font-family:'Montserrat',sans-serif; font-size:0.65rem;
+    font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+    border-radius:3px; cursor:pointer; transition:all 0.15s;
+  }
+  .btn-abort:hover { background:var(--red); color:#fff; }
+
+  .retake-badge {
+    display:inline-flex; align-items:center; gap:0.3rem;
+    background:rgba(243,156,18,0.1); border:1px solid var(--amber);
+    color:var(--amber); font-size:0.58rem; font-weight:700;
+    letter-spacing:0.1em; text-transform:uppercase;
+    padding:0.2rem 0.55rem; border-radius:2px; margin-top:0.5rem;
+  }
+
+  /* ABORT MODAL */
+  .abort-ov {
+    display:none; position:fixed; inset:0;
+    background:rgba(60,0,0,0.7); z-index:300;
+    align-items:center; justify-content:center;
+    flex-direction:column; text-align:center; padding:2rem;
+  }
+  .abort-ov.show { display:flex; animation:fadeUp 0.2s ease; }
+  .abort-card {
+    background:var(--white); border-radius:6px;
+    padding:1.8rem 1.4rem; max-width:340px; width:100%;
+  }
+  .abort-icon { font-size:2.2rem; margin-bottom:0.8rem; }
+  .abort-title { font-size:1rem; font-weight:800; color:var(--red); margin-bottom:0.4rem; }
+  .abort-desc { font-size:0.75rem; color:var(--mid); line-height:1.65; margin-bottom:1.2rem; }
+  .abort-detail {
+    background:var(--offwhite); border:1px solid var(--border);
+    border-radius:3px; padding:0.8rem; margin-bottom:1.2rem;
+    text-align:left;
+  }
+  .abort-row { display:flex; justify-content:space-between; font-size:0.7rem; padding:0.18rem 0; }
+  .abort-k { color:var(--muted); font-weight:500; }
+  .abort-v { font-weight:700; color:var(--text); }
+  .abort-v.bad { color:var(--red); }
+  .abort-btns { display:flex; gap:0.5rem; }
+  .abort-cancel {
+    flex:1; background:var(--offwhite); color:var(--mid);
+    border:1.5px solid var(--border); padding:0.72rem;
+    font-family:'Montserrat',sans-serif; font-size:0.65rem;
+    font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+    border-radius:3px; cursor:pointer;
+  }
+  .abort-confirm {
+    flex:2; background:var(--red); color:#fff; border:none;
+    padding:0.72rem; font-family:'Montserrat',sans-serif;
+    font-size:0.65rem; font-weight:800; letter-spacing:0.1em;
+    text-transform:uppercase; border-radius:3px; cursor:pointer;
+  }
 
   /* SIGN-OFF */
   .so-card{background:var(--white);border:1.5px solid var(--border);border-radius:4px;padding:1.1rem;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
@@ -659,12 +755,49 @@
           <div class="ci" id="p2c7" onclick="tick('p2c7')"><div class="cbox"></div><div class="ctxt">Returned to waiting place — duties assigned and permission given to enter section for work</div></div>
         </div>
         <div class="slbl">Gas Readings — MGDI Log</div>
-        <div class="gas-grid">
-          <div class="gas-f"><label>CO — Carbon Monoxide</label><input type="number" placeholder="0" step="0.1" min="0"/><div class="gas-unit">ppm · Limit: 50 ppm</div></div>
-          <div class="gas-f"><label>NO₂ — Nitrogen Dioxide</label><input type="number" placeholder="0" step="0.1" min="0"/><div class="gas-unit">ppm · Limit: 3 ppm</div></div>
-          <div class="gas-f"><label>O₂ — Oxygen Level</label><input type="number" placeholder="20.9" step="0.1" min="0"/><div class="gas-unit">% · Minimum: 19.5%</div></div>
-          <div class="gas-f"><label>H₂S — Hydrogen Sulphide</label><input type="number" placeholder="0" step="0.1" min="0"/><div class="gas-unit">ppm · Limit: 10 ppm</div></div>
+
+        <!-- Retake badge — shows after a retake is logged -->
+        <div id="retake-badge" style="display:none;">
+          <div class="retake-badge">⚠ Retake #<span id="retake-count">1</span> — Previous readings were unsafe. Log corrected readings below.</div>
         </div>
+
+        <div class="gas-grid">
+          <div class="gas-f" id="gf-co">
+            <label>CO — Carbon Monoxide</label>
+            <input type="number" id="gas-co" placeholder="0" step="0.1" min="0" oninput="validateGas()"/>
+            <div class="gas-unit">ppm · Limit: 50 ppm</div>
+            <div class="gas-status" id="gs-co"></div>
+          </div>
+          <div class="gas-f" id="gf-no2">
+            <label>NO₂ — Nitrogen Dioxide</label>
+            <input type="number" id="gas-no2" placeholder="0" step="0.1" min="0" oninput="validateGas()"/>
+            <div class="gas-unit">ppm · Limit: 3 ppm</div>
+            <div class="gas-status" id="gs-no2"></div>
+          </div>
+          <div class="gas-f" id="gf-o2">
+            <label>O₂ — Oxygen Level</label>
+            <input type="number" id="gas-o2" placeholder="20.9" step="0.1" min="0" oninput="validateGas()"/>
+            <div class="gas-unit">% · Minimum: 19.5%</div>
+            <div class="gas-status" id="gs-o2"></div>
+          </div>
+          <div class="gas-f" id="gf-h2s">
+            <label>H₂S — Hydrogen Sulphide</label>
+            <input type="number" id="gas-h2s" placeholder="0" step="0.1" min="0" oninput="validateGas()"/>
+            <div class="gas-unit">ppm · Limit: 10 ppm</div>
+            <div class="gas-status" id="gs-h2s"></div>
+          </div>
+        </div>
+
+        <!-- Gas failure banner — shown when readings are unsafe -->
+        <div class="gas-fail-banner" id="gas-fail-banner">
+          <div class="gfb-title">🚨 Unsafe Gas Levels Detected</div>
+          <div class="gfb-list" id="gfb-list"></div>
+          <div class="gfb-actions">
+            <button class="btn-retake" onclick="retakeGas()">↺ Retake Readings</button>
+            <button class="btn-abort" onclick="openAbort()">✕ Abort Re-Entry</button>
+          </div>
+        </div>
+
         <div class="nb"><strong>NB:</strong> If multi-gas detector sounds Alarm 2 — crew must immediately withdraw and institute ventilation. Do not re-enter until safe.</div>
         <div class="slbl">FOG Lights</div>
         <div class="cklist">
@@ -786,6 +919,20 @@
     <button class="btn-next" id="btn-next" onclick="nextPhase()">Next →</button>
   </div>
 
+<!-- ABORT MODAL -->
+<div class="abort-ov" id="abort-ov">
+  <div class="abort-card">
+    <div class="abort-icon">🚨</div>
+    <div class="abort-title">Abort Re-Entry?</div>
+    <div class="abort-desc">Gas levels are unsafe for re-entry. Aborting will save this record as <strong>ABORTED — UNSAFE GAS LEVELS</strong> with all readings and timestamps preserved for SHE review.</div>
+    <div class="abort-detail" id="abort-detail"></div>
+    <div class="abort-btns">
+      <button class="abort-cancel" onclick="closeAbort()">← Go Back</button>
+      <button class="abort-confirm" onclick="confirmAbort()">Confirm Abort</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app -->
 
 <!-- WARN MODAL -->
@@ -903,6 +1050,16 @@
 </div>
 
 <script>
+// ══════════════════════════════════════════
+//  ⚙️  SUPABASE CONFIG
+//  Replace these two values with your own
+//  from Supabase → Settings → API
+// ══════════════════════════════════════════
+const SUPABASE_URL  = 'https://qdlaaiofcrfkrsujhisg.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkbGFhaW9mY3Jma3JzdWpoaXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTk2NTAsImV4cCI6MjA5MDA3NTY1MH0.7jPppm1eDV_Fo7XuTr5KinPzX4Zb93EqQYXT9tjzFV0';
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ══════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════
@@ -1061,10 +1218,26 @@ function activateSOS(){
   document.getElementById('sos-ring').textContent='🚨';
 }
 
-function sendSOS(){
-  if(!sosActivated)return;
-  document.getElementById('sos-pre').style.display='none';
-  document.getElementById('sos-sent').style.display='flex';
+async function sendSOS(){
+  if(!sosActivated) return;
+
+  // Save to Supabase immediately — don't wait, don't block
+  try {
+    await supabase.from('sos_alerts').insert({
+      officer_name: userData.name  || 'Unknown',
+      officer_id:   userData.id    || 'Unknown',
+      section:      userData.section || null,
+      zone:         currentZone    || null,
+      triggered_at: new Date().toLocaleTimeString(),
+      status:       'sent',
+    });
+  } catch(e) {
+    console.error('SOS save failed:', e);
+    // Still show the sent screen — never block an SOS because of a DB error
+  }
+
+  document.getElementById('sos-pre').style.display  = 'none';
+  document.getElementById('sos-sent').style.display = 'flex';
 }
 
 function closeSOS(){
@@ -1173,6 +1346,8 @@ function nextPhase(){
     }
     return;
   }
+  // Gas readings validation — only on Phase 3 (index 2)
+  if(!gasReadingsValid()) return;
   const errBan=document.getElementById('err'+currentPhase);
   if(errBan)errBan.classList.remove('show');
   const allItems=document.querySelectorAll(`#pp${currentPhase} .ci:not(.crit)`);
@@ -1255,20 +1430,351 @@ function doSign(boxId,txtId,isSelf){
   document.getElementById(txtId).textContent='✓ Signed — '+name+' · '+new Date().toLocaleTimeString();
 }
 
-function submitProcedure(){
-  const now=new Date();
-  document.getElementById('rec-off').textContent=userData.name+' ('+userData.id+')';
-  document.getElementById('rec-sec').textContent=userData.section;
-  document.getElementById('rec-zone').textContent=currentZone||'Not recorded';
-  document.getElementById('rec-nm').textContent=nearMisses.length;
-  document.getElementById('rec-ts').textContent=now.toLocaleString();
-  clearDraft();
-  document.getElementById('app').style.display='none';
-  const suc=document.getElementById('success');
-  suc.style.display='flex';
+// ══════════════════════════════════════════
+//  SUBMIT — saves everything to Supabase
+// ══════════════════════════════════════════
+async function submitProcedure(){
+  // Show loading state on button
+  const btn = document.getElementById('btn-next');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    const now = new Date();
+
+    // Collect safety talk topics
+    const topicChips = document.querySelectorAll('.chip.sel');
+    const topics = Array.from(topicChips).map(c => c.textContent).join(', ');
+
+    // ── 1. INSERT MASTER SUBMISSION ──
+    const { data: submission, error: subError } = await supabase
+      .from('submissions')
+      .insert({
+        officer_name:     userData.name,
+        officer_id:       userData.id,
+        officer_role:     userData.role,
+        blasting_licence: userData.lic || null,
+        section:          userData.section,
+        zone:             currentZone || null,
+        blast_time:       document.getElementById('blast-time')?.value || null,
+        reentry_time:     document.getElementById('reentry-time')?.value || null,
+        water_duration:   document.getElementById('water-dur')?.value || null,
+        safety_topics:    topics || null,
+        safety_notes:     document.getElementById('stalk-notes')?.value || null,
+        supervisor_name:  document.getElementById('sup-name')?.value || null,
+        overall_remarks:  document.querySelector('#pp5 textarea')?.value || null,
+        status:           'completed',
+        retake_count:     gasRetakeCount,
+        completed_at:     now.toISOString(),
+      })
+      .select()
+      .single();
+
+    if(subError) throw subError;
+
+    const submissionId = submission.id;
+
+    // ── 2. INSERT GAS READINGS ──
+    const coVal  = parseFloat(document.getElementById('gas-co')?.value);
+    const no2Val = parseFloat(document.getElementById('gas-no2')?.value);
+    const o2Val  = parseFloat(document.getElementById('gas-o2')?.value);
+    const h2sVal = parseFloat(document.getElementById('gas-h2s')?.value);
+
+    const { error: gasError } = await supabase
+      .from('gas_readings')
+      .insert({
+        submission_id: submissionId,
+        co_ppm:        isNaN(coVal)  ? null : coVal,
+        no2_ppm:       isNaN(no2Val) ? null : no2Val,
+        o2_percent:    isNaN(o2Val)  ? null : o2Val,
+        h2s_ppm:       isNaN(h2sVal) ? null : h2sVal,
+        co_safe:       !isNaN(coVal)  && coVal  <= 50,
+        no2_safe:      !isNaN(no2Val) && no2Val <= 3,
+        o2_safe:       !isNaN(o2Val)  && o2Val  >= 19.5,
+        h2s_safe:      !isNaN(h2sVal) && h2sVal <= 10,
+        all_safe:      !isNaN(coVal) && !isNaN(no2Val) && !isNaN(o2Val) && !isNaN(h2sVal)
+                       && coVal <= 50 && no2Val <= 3 && o2Val >= 19.5 && h2sVal <= 10,
+        retake_number: gasRetakeCount,
+      });
+
+    if(gasError) throw gasError;
+
+    // ── 3. INSERT NEAR MISSES ──
+    if(nearMisses.length > 0){
+      const nmRows = nearMisses.map(nm => ({
+        submission_id: submissionId,
+        officer_name:  userData.name,
+        incident_type: nm.type,
+        severity:      nm.severity,
+        zone:          nm.zone || currentZone || null,
+        description:   nm.desc,
+        action_taken:  nm.action || null,
+        section:       userData.section,
+      }));
+
+      const { error: nmError } = await supabase
+        .from('near_misses')
+        .insert(nmRows);
+
+      if(nmError) throw nmError;
+    }
+
+    // ── 4. SHOW SUCCESS ──
+    clearDraft();
+
+    document.getElementById('rec-off').textContent  = userData.name + ' (' + userData.id + ')';
+    document.getElementById('rec-sec').textContent  = userData.section;
+    document.getElementById('rec-zone').textContent = currentZone || 'Not recorded';
+    document.getElementById('rec-nm').textContent   = nearMisses.length;
+    document.getElementById('rec-ts').textContent   = now.toLocaleString();
+
+    // Show real DB record ID
+    const recId = document.getElementById('rec-ts');
+    recId.textContent = now.toLocaleString() + ' · ID: ' + submissionId.substring(0,8).toUpperCase();
+
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('success').style.display = 'flex';
+
+  } catch(err) {
+    console.error('Supabase error:', err);
+    btn.textContent = 'Submit Record ✓';
+    btn.disabled = false;
+    alert('⚠ Failed to save record. Please check your connection and try again.\n\nError: ' + (err.message || JSON.stringify(err)));
+  }
 }
 
-function resetAll(){clearDraft();location.reload();}
+// ══════════════════════════════════════════
+//  GAS VALIDATION
+// ══════════════════════════════════════════
+
+// Limits: { id, label, fieldId, statusId, max/min, isMin }
+const GAS_LIMITS = [
+  { id:'co',  label:'CO (Carbon Monoxide)',    fieldId:'gf-co',  inputId:'gas-co',  statusId:'gs-co',  limit:50,   isMin:false, unit:'ppm' },
+  { id:'no2', label:'NO₂ (Nitrogen Dioxide)',  fieldId:'gf-no2', inputId:'gas-no2', statusId:'gs-no2', limit:3,    isMin:false, unit:'ppm' },
+  { id:'o2',  label:'O₂ (Oxygen Level)',       fieldId:'gf-o2',  inputId:'gas-o2',  statusId:'gs-o2',  limit:19.5, isMin:true,  unit:'%'   },
+  { id:'h2s', label:'H₂S (Hydrogen Sulphide)', fieldId:'gf-h2s', inputId:'gas-h2s', statusId:'gs-h2s', limit:10,   isMin:false, unit:'ppm' },
+];
+
+let gasRetakeCount = 0;
+let gasReadingsLocked = false; // true once all readings pass
+let gasHasFailed = false;
+
+function validateGas() {
+  if(gasReadingsLocked) return;
+
+  let failures = [];
+  let allFilled = true;
+
+  GAS_LIMITS.forEach(g => {
+    const input = document.getElementById(g.inputId);
+    const field = document.getElementById(g.fieldId);
+    const status = document.getElementById(g.statusId);
+    const val = parseFloat(input.value);
+
+    if(input.value === '' || isNaN(val)) {
+      // Not filled yet — neutral state
+      field.classList.remove('safe','danger');
+      status.innerHTML = '';
+      allFilled = false;
+      return;
+    }
+
+    const exceeded = g.isMin ? val < g.limit : val > g.limit;
+
+    if(exceeded) {
+      field.classList.add('danger');
+      field.classList.remove('safe');
+      const diff = g.isMin
+        ? (g.limit - val).toFixed(1)
+        : (val - g.limit).toFixed(1);
+      const msg = g.isMin
+        ? `Below minimum by ${diff}${g.unit}`
+        : `Exceeds limit by ${diff}${g.unit}`;
+      status.innerHTML = `<span class="gas-status bad">✕ ${msg}</span>`;
+      failures.push({ label:g.label, val, limit:g.limit, unit:g.unit, isMin:g.isMin, msg });
+    } else {
+      field.classList.add('safe');
+      field.classList.remove('danger');
+      const msg = g.isMin ? `Safe — ${val}${g.unit}` : `Safe — ${val}${g.unit}`;
+      status.innerHTML = `<span class="gas-status ok">✓ ${msg}</span>`;
+    }
+  });
+
+  // Show or hide failure banner
+  const banner = document.getElementById('gas-fail-banner');
+  const list   = document.getElementById('gfb-list');
+
+  if(failures.length > 0 && allFilled) {
+    gasHasFailed = true;
+    list.innerHTML = failures.map(f => {
+      const arrow = f.isMin ? '↓' : '↑';
+      return `${arrow} <strong>${f.label}</strong>: recorded ${f.val}${f.unit} — ${f.msg}<br>`;
+    }).join('');
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+    if(allFilled && failures.length === 0) {
+      gasReadingsLocked = true; // all safe and filled
+    }
+  }
+
+  saveDraft();
+}
+
+function retakeGas() {
+  gasRetakeCount++;
+  gasReadingsLocked = false;
+  gasHasFailed = false;
+
+  // Clear all gas fields
+  ['gas-co','gas-no2','gas-o2','gas-h2s'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+
+  // Reset all field states
+  GAS_LIMITS.forEach(g => {
+    document.getElementById(g.fieldId).classList.remove('safe','danger');
+    document.getElementById(g.statusId).innerHTML = '';
+  });
+
+  // Hide failure banner
+  document.getElementById('gas-fail-banner').classList.remove('show');
+
+  // Show retake badge
+  document.getElementById('retake-badge').style.display = 'block';
+  document.getElementById('retake-count').textContent = gasRetakeCount;
+
+  // Scroll to gas fields
+  document.getElementById('gf-co').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function openAbort() {
+  // Build abort detail summary
+  const detail = document.getElementById('abort-detail');
+  const rows = GAS_LIMITS.map(g => {
+    const val = document.getElementById(g.inputId).value;
+    const exceeded = val !== '' && (g.isMin ? parseFloat(val) < g.limit : parseFloat(val) > g.limit);
+    return `<div class="abort-row">
+      <span class="abort-k">${g.label}</span>
+      <span class="abort-v ${exceeded ? 'bad' : ''}">${val || '—'} ${g.unit} ${exceeded ? '⚠' : '✓'}</span>
+    </div>`;
+  }).join('');
+
+  detail.innerHTML = rows +
+    `<div class="abort-row" style="border-top:1px solid var(--border);margin-top:0.4rem;padding-top:0.4rem;">
+      <span class="abort-k">Retake Attempts</span>
+      <span class="abort-v">${gasRetakeCount}</span>
+    </div>
+    <div class="abort-row">
+      <span class="abort-k">Officer</span>
+      <span class="abort-v">${userData.name || '—'}</span>
+    </div>
+    <div class="abort-row">
+      <span class="abort-k">Time</span>
+      <span class="abort-v">${new Date().toLocaleTimeString()}</span>
+    </div>`;
+
+  document.getElementById('abort-ov').classList.add('show');
+}
+
+function closeAbort() {
+  document.getElementById('abort-ov').classList.remove('show');
+}
+
+async function confirmAbort() {
+  document.getElementById('abort-ov').classList.remove('show');
+
+  try {
+    const coVal  = parseFloat(document.getElementById('gas-co')?.value);
+    const no2Val = parseFloat(document.getElementById('gas-no2')?.value);
+    const o2Val  = parseFloat(document.getElementById('gas-o2')?.value);
+    const h2sVal = parseFloat(document.getElementById('gas-h2s')?.value);
+
+    const { data: submission, error: subError } = await supabase
+      .from('submissions')
+      .insert({
+        officer_name:  userData.name,
+        officer_id:    userData.id,
+        officer_role:  userData.role,
+        section:       userData.section,
+        zone:          currentZone || null,
+        blast_time:    document.getElementById('blast-time')?.value || null,
+        reentry_time:  document.getElementById('reentry-time')?.value || null,
+        status:        'aborted_unsafe_gas',
+        retake_count:  gasRetakeCount,
+        completed_at:  new Date().toISOString(),
+      })
+      .select().single();
+
+    if(!subError && submission) {
+      await supabase.from('gas_readings').insert({
+        submission_id: submission.id,
+        co_ppm:  isNaN(coVal)  ? null : coVal,
+        no2_ppm: isNaN(no2Val) ? null : no2Val,
+        o2_percent: isNaN(o2Val) ? null : o2Val,
+        h2s_ppm: isNaN(h2sVal) ? null : h2sVal,
+        co_safe:  !isNaN(coVal)  && coVal  <= 50,
+        no2_safe: !isNaN(no2Val) && no2Val <= 3,
+        o2_safe:  !isNaN(o2Val)  && o2Val  >= 19.5,
+        h2s_safe: !isNaN(h2sVal) && h2sVal <= 10,
+        all_safe: false,
+        retake_number: gasRetakeCount,
+      });
+    }
+  } catch(e) { console.error('Abort save error:', e); }
+
+  clearDraft();
+  document.getElementById('app').style.display = 'none';
+  const suc = document.getElementById('success');
+  document.getElementById('rec-off').textContent  = userData.name + ' (' + userData.id + ')';
+  document.getElementById('rec-sec').textContent  = userData.section;
+  document.getElementById('rec-zone').textContent = currentZone || 'Not recorded';
+  document.getElementById('rec-nm').textContent   = nearMisses.length;
+  document.getElementById('rec-ts').textContent   = new Date().toLocaleString();
+  const statusEl = suc.querySelector('.rec-v.ok');
+  if(statusEl){ statusEl.textContent='⚠ ABORTED — UNSAFE GAS LEVELS'; statusEl.style.color='var(--accent)'; }
+  suc.querySelector('.suc-ttl').textContent = 'Re-Entry Aborted';
+  suc.querySelector('.suc-sub').textContent = 'Re-entry aborted due to unsafe gas readings. All data saved and flagged for SHE review.';
+  suc.style.display = 'flex';
+}
+
+// Override nextPhase to also check gas readings on Phase 3
+const _originalNextPhase = nextPhase;
+// We patch the gas check into the existing nextPhase via the CRITS check extension below.
+// Gas check runs inside nextPhase — see gasReadingsValid() called there.
+
+function gasReadingsValid() {
+  // Only relevant on phase 2 (Initial Re-Entry = index 2)
+  if(currentPhase !== 2) return true;
+
+  const allFilled = GAS_LIMITS.every(g => {
+    const v = document.getElementById(g.inputId).value;
+    return v !== '' && !isNaN(parseFloat(v));
+  });
+
+  if(!allFilled) {
+    // Show a specific error
+    const errBan  = document.getElementById('err2');
+    const errList = document.getElementById('err2-list');
+    if(errBan && errList) {
+      errList.innerHTML = (errList.innerHTML || '') + '<br>• All four gas readings must be entered before proceeding';
+      errBan.classList.add('show');
+    }
+    return false;
+  }
+
+  if(gasHasFailed && !gasReadingsLocked) {
+    // Readings were entered but failed — force them to retake or abort
+    document.getElementById('gas-fail-banner').classList.add('show');
+    document.getElementById('gas-fail-banner').scrollIntoView({ behavior:'smooth', block:'center' });
+    return false;
+  }
+
+  return true;
+}
+
+  function resetAll(){clearDraft();location.reload();}
 </script>
 </body>
 </html>
