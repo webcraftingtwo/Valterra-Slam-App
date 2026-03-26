@@ -1058,11 +1058,8 @@
 const SUPABASE_URL  = 'https://qdlaaiofcrfkrsujhisg.supabase.co';
 const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkbGFhaW9mY3Jma3JzdWpoaXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTk2NTAsImV4cCI6MjA5MDA3NTY1MH0.7jPppm1eDV_Fo7XuTr5KinPzX4Zb93EqQYXT9tjzFV0';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ══════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════
+// STATE -- declared first so nothing can crash before userData exists
 let currentPhase = 0;
 let userData = {};
 let timerSec = 1800;
@@ -1074,6 +1071,23 @@ let nearMisses = [];
 let selectedNmType = '';
 let selectedSeverity = '';
 let sosActivated = false;
+
+// db starts null -- initialized safely after DOM loads
+let db = null;
+
+function initDB() {
+  try {
+    if(window.supabase && window.supabase.createClient) {
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log('Supabase connected OK');
+    } else {
+      console.warn('Supabase CDN not ready');
+    }
+  } catch(e) {
+    console.error('DB init error:', e);
+  }
+}
+
 
 const CRITS = {
   0:['p0c0','p0c1','p0c3','p0c4','p0c5'],
@@ -1121,6 +1135,7 @@ function clearDraft(){try{localStorage.removeItem('valterra_draft');}catch(e){}}
 //  INIT
 // ══════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
+  initDB(); // connect to Supabase safely after DOM is ready
   const saved=loadUser();
   if(saved&&saved.name){
     document.getElementById('ret-banner').style.display='block';
@@ -1223,7 +1238,7 @@ async function sendSOS(){
 
   // Save to Supabase immediately — don't wait, don't block
   try {
-    await supabase.from('sos_alerts').insert({
+    await db.from('sos_alerts').insert({
       officer_name: userData.name  || 'Unknown',
       officer_id:   userData.id    || 'Unknown',
       section:      userData.section || null,
@@ -1439,6 +1454,14 @@ async function submitProcedure(){
   btn.textContent = 'Saving...';
   btn.disabled = true;
 
+  // Safety check -- if db failed to init, warn clearly
+  if(!db) {
+    btn.textContent = 'Submit Record ✓';
+    btn.disabled = false;
+    alert('⚠ Database not connected. Please check your SUPABASE_URL and SUPABASE_KEY in the file and try again.');
+    return;
+  }
+
   try {
     const now = new Date();
 
@@ -1447,7 +1470,7 @@ async function submitProcedure(){
     const topics = Array.from(topicChips).map(c => c.textContent).join(', ');
 
     // ── 1. INSERT MASTER SUBMISSION ──
-    const { data: submission, error: subError } = await supabase
+    const { data: submission, error: subError } = await db
       .from('submissions')
       .insert({
         officer_name:     userData.name,
@@ -1480,7 +1503,7 @@ async function submitProcedure(){
     const o2Val  = parseFloat(document.getElementById('gas-o2')?.value);
     const h2sVal = parseFloat(document.getElementById('gas-h2s')?.value);
 
-    const { error: gasError } = await supabase
+    const { error: gasError } = await db
       .from('gas_readings')
       .insert({
         submission_id: submissionId,
@@ -1512,7 +1535,7 @@ async function submitProcedure(){
         section:       userData.section,
       }));
 
-      const { error: nmError } = await supabase
+      const { error: nmError } = await db
         .from('near_misses')
         .insert(nmRows);
 
@@ -1691,7 +1714,7 @@ async function confirmAbort() {
     const o2Val  = parseFloat(document.getElementById('gas-o2')?.value);
     const h2sVal = parseFloat(document.getElementById('gas-h2s')?.value);
 
-    const { data: submission, error: subError } = await supabase
+    const { data: submission, error: subError } = await db
       .from('submissions')
       .insert({
         officer_name:  userData.name,
@@ -1708,7 +1731,7 @@ async function confirmAbort() {
       .select().single();
 
     if(!subError && submission) {
-      await supabase.from('gas_readings').insert({
+      await db.from('gas_readings').insert({
         submission_id: submission.id,
         co_ppm:  isNaN(coVal)  ? null : coVal,
         no2_ppm: isNaN(no2Val) ? null : no2Val,
